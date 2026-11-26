@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ôn Tập English Morphology</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <header class="top-header">
+    <div class="header-inner">
+      <div>
+        <div class="brand-title"><span>🌿</span><span>English Morphology Practice</span></div>
+        <div class="brand-subtitle">chos qhuy</div>
+      </div>
+      <div class="header-actions">
+        <select id="examSelector" class="exam-select" aria-label="Chọn bộ đề ôn tập"></select>
+        <button type="button" class="btn btn-white" id="openImportModalBtn">+ Thêm đề mới</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="sticky-toolbar">
+    <div class="toolbar-inner">
+      <div class="stats-group">
+        <div class="stat-pill">
+          <span>Đã làm:</span><strong id="answeredCount">0/0</strong>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill" id="progressBar"></div></div>
+        </div>
+        <div class="stat-pill"><span>Đúng:</span><strong id="correctCount">0</strong></div>
+        <div class="stat-pill"><span>⏱</span><strong id="timerDisplay">00:00</strong></div>
+      </div>
+      <div class="mode-switch" role="group" aria-label="Chế độ làm bài">
+        <button type="button" class="mode-btn active" id="modePracticeBtn">Luyện tập (Chấm ngay)</button>
+        <button type="button" class="mode-btn" id="modeExamBtn">Thi thử (Nộp cuối giờ)</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="main-container">
+    <section>
+      <div class="result-banner" id="resultBanner">
+        <div class="result-head">
+          <h2>📊 Kết quả bài làm của bạn</h2>
+          <button type="button" class="btn btn-outline" id="retryWrongBtn">Làm lại các câu sai</button>
+        </div>
+        <div class="result-grid" id="resultGrid"></div>
+      </div>
+
+      <div class="filter-bar">
+        <div class="filter-tabs" id="filterTabs">
+          <button type="button" class="filter-tab active" data-filter="all">Tất cả</button>
+          <button type="button" class="filter-tab" data-filter="unanswered">Chưa làm</button>
+          <button type="button" class="filter-tab" data-filter="wrong">Làm sai</button>
+          <button type="button" class="filter-tab" data-filter="bookmarked">Đánh dấu ⭐</button>
+        </div>
+        <div class="filter-actions">
+          <button type="button" class="btn btn-outline" id="shuffleBtn">🔀 Xáo trộn</button>
+          <button type="button" class="btn btn-danger-outline" id="resetBtn">↺ Làm lại từ đầu</button>
+        </div>
+      </div>
+
+      <div id="questionsContainer"></div>
+    </section>
+
+    <aside class="sidebar-panel">
+      <div class="sidebar-title"><span>Bảng câu hỏi</span><span class="sidebar-hint">Nhấn để chuyển</span></div>
+      <div class="q-grid" id="questionNavGrid"></div>
+      <div class="sidebar-actions">
+        <button type="button" class="btn btn-primary" id="submitAllBtn">✅ Nộp bài & Chấm điểm</button>
+        <button type="button" class="btn btn-outline" id="showAllAnswersBtn">👁 Hiện tất cả đáp án</button>
+      </div>
+    </aside>
+  </main>
+
+  <div class="modal-backdrop" id="importModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>➕ Thêm bộ đề mới (tự động nhận diện)</h3>
+        <button type="button" class="btn btn-outline" id="closeImportModalBtn">✕ Đóng</button>
+      </div>
+      <p class="modal-note">
+        Dán đề theo định dạng <code>Câu 1: ... Đáp án đúng: A</code> hoặc <code>Câu 16: ... → Đáp án được chấp nhận: F-B</code>.
+        Đề thêm ở đây chỉ lưu trên trình duyệt của bạn. Muốn chia sẻ cho bạn bè, hãy tạo file đề riêng (xem hướng dẫn đầu file <code>exams.js</code>).
+      </p>
+      <label class="modal-label" for="newExamTitle">Tên bộ đề:</label>
+      <input type="text" id="newExamTitle" class="text-answer-input full-width" placeholder="Ví dụ: Đề ôn tập Morphology - Số 2" />
+      <label class="modal-label" for="newExamRawText">Nội dung câu hỏi & đáp án:</label>
+      <textarea id="newExamRawText" class="modal-textarea" placeholder="Dán toàn bộ nội dung đề vào đây..."></textarea>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="cancelImportBtn">Hủy</button>
+        <button type="button" class="btn btn-primary" id="saveNewExamBtn">💾 Lưu & Mở đề này</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-msg" id="toastMsg"></div>
+
+  <!-- Dữ liệu đề: thêm file đề mới ở đây (sau exams.js, trước app.js) -->
+  <script src="exams.js"></script>
+  <!-- <script src="de-2.js"></script> -->
+  <script src="app.js"></script>
+</body>
+</html>
