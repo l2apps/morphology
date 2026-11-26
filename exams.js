@@ -10,7 +10,7 @@
    HÀM TẠO CÂU HỎI (đã khai báo sẵn bên dưới, dùng được ở file đề khác):
    - mcq(id, đề, [4 lựa chọn], 'D', 'ghi chú')   → Part 1 trắc nghiệm
    - morph(id, từ, 'B-F-B', 'pre- pay -ment')     → Part 2 hình vị tự do/ràng buộc
-   - cls(id, câu có {từ cần xét}, 'WCp')          → Part 3 phân loại từ
+   - cls(id, câu có {từ cần xét}, 'CpW')          → Part 3 phân loại từ
    - bound(id, '[bio]logy [bio]graphy', ['LIFE','LIVE'], 'life / live') → Part 4
    ========================================================================= */
 
@@ -33,8 +33,8 @@ const morph = (id, word, ans, parts) => ({
 const cls = (id, sentence, ans) => ({
   id, part: 3, type: 'text',
   prompt: sentence.replace(/\{(.+?)\}/g, '<span class="target-highlight">$1</span>'),
-  placeholder: 'Chọn hoặc nhập: S, C-FB, C-BB, WCp, GS',
-  quickChips: ['S', 'C-FB', 'C-BB', 'WCp', 'GS'], isSingleChoiceChip: true,
+  placeholder: 'Chọn hoặc nhập: S, C-FB, C-BB, CpW, GS',
+  quickChips: ['S', 'C-FB', 'C-BB', 'CpW', 'GS'], isSingleChoiceChip: true,
   accepted: [ans.toUpperCase()], displayAnswer: ans
 });
 
@@ -55,7 +55,7 @@ window.EXAM_SETS.push({
     2: { title: 'PART 2: IDENTIFY FREE AND BOUND MORPHEMES',
          desc: 'Tách từ thành các hình vị và xác định hình vị tự do (F) hay ràng buộc (B). Ví dụ: disrespected → B-F-B (Câu 16 – 30).' },
     3: { title: 'PART 3: WORD CLASSIFICATION',
-         desc: 'Xác định biểu thức được tô xanh/in nghiêng là: S (Simple), C-FB (Complex - Free Base), C-BB (Complex - Bound Base), WCp (Word Compound), hay GS (Grammatical Structure) (Câu 31 – 45).' },
+         desc: 'Xác định biểu thức được tô xanh/in nghiêng là: S (Simple), C-FB (Complex - Free Base), C-BB (Complex - Bound Base), CpW (Compound Word), hay GS (Grammatical Structure) (Câu 31 – 45).' },
     4: { title: 'PART 4: MEANING OF UNDERLINED BOUND BASES',
          desc: 'Viết nghĩa tiếng Anh của gốc từ ràng buộc (bound base) được gạch chân trong nhóm từ (Câu 46 – 50).' }
   },
@@ -98,18 +98,18 @@ window.EXAM_SETS.push({
     morph(30, 'unpredictable', 'B-B-B-B', 'un- pre- dict -able'),
 
     // PART 3
-    cls(31, "His {breakthrough} wasn't recognized until the 1990s.", 'WCp'),
+    cls(31, "His {breakthrough} wasn't recognized until the 1990s.", 'CpW'),
     cls(32, 'Check-out is at 11 AM, so we need to {check out} of our room by then.', 'GS'),
-    cls(33, 'He read a {newspaper} article.', 'WCp'),
+    cls(33, 'He read a {newspaper} article.', 'CpW'),
     cls(34, 'Studying {abroad} is a wonderful opportunity to learn about a new culture.', 'S'),
     cls(35, '{Students} must submit their homework by tomorrow.', 'S'),
     cls(36, 'My parents are celebrating their 30th wedding {anniversary} with a trip to Italy.', 'S'),
     cls(37, 'They built a {subway} system in the city.', 'C-FB'),
-    cls(38, 'The {football} match was exciting.', 'WCp'),
+    cls(38, 'The {football} match was exciting.', 'CpW'),
     cls(39, 'The {darkness} of the cave was frightening.', 'C-FB'),
     cls(40, 'The {Japanese} invented the rice cooker in 1923.', 'C-FB'),
     cls(41, 'He acted with great {carelessness}.', 'C-FB'),
-    cls(42, 'Our {classroom} is on the second floor.', 'WCp'),
+    cls(42, 'Our {classroom} is on the second floor.', 'CpW'),
     cls(43, 'I admire his {leadership}.', 'C-FB'),
     cls(44, 'She made an {argument} in class.', 'C-FB'),
     cls(45, 'We saw a sudden {flash of light} in the sky.', 'GS'),
