@@ -265,6 +265,7 @@ function renderSidebarNav() {
     if (bookmarks[q.id]) btn.classList.add('nav-bookmarked');
 
     btn.addEventListener('click', () => {
+      closeNavSheet();
       if (!$(`question-card-${q.id}`)) {
         activeFilter = 'all';
         updateFilterTabUI();
@@ -380,6 +381,7 @@ function attachCardEvents() {
 
 /* ---------- NỘP BÀI ---------- */
 function submitAndGradeAll() {
+  closeNavSheet();
   isSubmitted = true;
   stopTimer();
   currentQuestions.forEach(q => { checkedState[q.id] = true; });
@@ -570,6 +572,18 @@ $('submitAllBtn').addEventListener('click', submitAndGradeAll);
 $('showAllAnswersBtn').addEventListener('click', submitAndGradeAll);
 $('retryWrongBtn').addEventListener('click', retryWrongQuestions);
 
+/* Bảng câu hỏi dạng bottom sheet trên điện thoại */
+function closeNavSheet() {
+  $('navSheet').classList.remove('open');
+  $('sheetBackdrop').classList.remove('open');
+}
+$('openNavBtn').addEventListener('click', () => {
+  $('navSheet').classList.add('open');
+  $('sheetBackdrop').classList.add('open');
+});
+$('closeNavBtn').addEventListener('click', closeNavSheet);
+$('sheetBackdrop').addEventListener('click', closeNavSheet);
+
 /* Modal thêm đề */
 const importModal = $('importModal');
 const closeModal = () => importModal.classList.remove('open');
@@ -577,7 +591,7 @@ $('openImportModalBtn').addEventListener('click', () => importModal.classList.ad
 $('closeImportModalBtn').addEventListener('click', closeModal);
 $('cancelImportBtn').addEventListener('click', closeModal);
 importModal.addEventListener('click', (e) => { if (e.target === importModal) closeModal(); });
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { closeModal(); closeNavSheet(); } });
 
 $('saveNewExamBtn').addEventListener('click', () => {
   const title = $('newExamTitle').value.trim();
