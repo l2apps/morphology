@@ -73,11 +73,21 @@ function initExam(index) {
 function updateTimerDisplay() {
   const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
   const s = String(timerSeconds % 60).padStart(2, '0');
-  $('timerDisplay').textContent = `${m}:${s}`;
+  const ex = allExamSets[currentExamIndex];
+  const lim = (mode === 'exam' && ex && ex.timeLimit) ? ` / ${ex.timeLimit}:00` : '';
+  $('timerDisplay').textContent = `${m}:${s}${lim}`;
 }
 function startTimer() {
   if (timerInterval) return;
-  timerInterval = setInterval(() => { timerSeconds++; updateTimerDisplay(); }, 1000);
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    updateTimerDisplay();
+    const ex = allExamSets[currentExamIndex];
+    if (mode === 'exam' && !isSubmitted && ex && ex.timeLimit && timerSeconds >= ex.timeLimit * 60) {
+      showToast('Hết giờ! Bài được nộp tự động.');
+      submitAndGradeAll();
+    }
+  }, 1000);
 }
 function stopTimer() {
   if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
@@ -100,7 +110,13 @@ function normalizeText(str) {
     .replace(/\s+/g, ' ');
 }
 
+function questionScore(q, ans) {
+  if (q.type === 'tree') return ans ? gradeTree(q, ans).score : 0;
+  return isQuestionCorrect(q, ans) ? 1 : 0;
+}
+
 function isQuestionCorrect(q, rawAns) {
+  if (q.type === 'tree') return !!rawAns && gradeTree(q, rawAns).score === 1;
   if (!rawAns || !rawAns.trim()) return false;
   const user = normalizeText(rawAns);
   return q.accepted.some(acc => normalizeText(acc) === user);
@@ -118,6 +134,7 @@ function escapeHtml(str) {
 
 /* ---------- RENDER ---------- */
 function renderAll() {
+  updateTimerDisplay();
   renderQuestions();
   renderSidebarNav();
   updateStats();
@@ -171,6 +188,10 @@ function renderQuestions() {
                   <span>${escapeHtml(optText.replace(/^[A-D]\.\s*/i, ''))}</span>
                 </div>`;
       }).join('')}</div>`;
+    } else if (q.type === 'tree') {
+      bodyHtml = `<div class="tree-host" data-qid="${q.id}"></div>
+        ${mode === 'practice' && !isSubmitted
+          ? `<div class="input-row" style="margin-top:12px"><button type="button" class="btn btn-primary check-single-btn" data-qid="${q.id}">Kiểm tra</button></div>` : ''}`;
     } else {
       const chipsHtml = q.quickChips ? `
         <div class="quick-chips">
@@ -198,7 +219,7 @@ function renderQuestions() {
     }
 
     let feedbackHtml = '';
-    if (revealed) {
+    if (revealed && q.type !== 'tree') {
       feedbackHtml = correct
         ? `<div class="feedback-box correct">✅ <strong>Chính xác!</strong> Đáp án: <strong>${q.displayAnswer}</strong></div>`
         : `<div class="feedback-box wrong">❌ <strong>Chưa chính xác.</strong> Đáp án đúng: <strong>${q.displayAnswer}</strong></div>`;
@@ -226,6 +247,7 @@ function renderQuestions() {
       <p style="font-size:.88rem">Hãy chuyển sang tab "Tất cả" để tiếp tục ôn tập nhé!</p></div>`;
   }
   attachCardEvents();
+  mountTreeHosts();
 }
 
 function renderSidebarNav() {
@@ -277,6 +299,20 @@ function updateFilterTabUI() {
     tab.classList.toggle('active', tab.dataset.filter === activeFilter));
 }
 
+/* Khi người dùng sửa đáp án đã chấm (practice): xóa phản hồi cũ */
+function onAnswerEdited(qId) {
+  if (mode === 'practice' && checkedState[qId]) {
+    checkedState[qId] = false;
+    const card = $(`question-card-${qId}`);
+    if (card) {
+      card.classList.remove('is-correct', 'is-wrong');
+      card.querySelectorAll('.feedback-box, .tree-result').forEach(el => el.remove());
+    }
+  }
+  renderSidebarNav();
+  updateStats();
+}
+
 /* ---------- SỰ KIỆN TRONG THẺ CÂU HỎI ---------- */
 function attachCardEvents() {
   document.querySelectorAll('.mcq-option').forEach(opt => {
@@ -293,18 +329,7 @@ function attachCardEvents() {
     input.addEventListener('input', (e) => {
       const qId = Number(input.dataset.qid);
       userAnswers[qId] = e.target.value;
-      // Sửa lại đáp án đã chấm → xóa phản hồi cũ ngay trên thẻ
-      if (mode === 'practice' && checkedState[qId]) {
-        checkedState[qId] = false;
-        const card = $(`question-card-${qId}`);
-        if (card) {
-          card.classList.remove('is-correct', 'is-wrong');
-          const fb = card.querySelector('.feedback-box');
-          if (fb) fb.remove();
-        }
-      }
-      renderSidebarNav();
-      updateStats();
+      onAnswerEdited(qId);
     });
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && mode === 'practice' && !isSubmitted) {
@@ -359,31 +384,39 @@ function submitAndGradeAll() {
   stopTimer();
   currentQuestions.forEach(q => { checkedState[q.id] = true; });
 
+  const exam = allExamSets[currentExamIndex];
+  const pp = exam.partPoints || null;     // điểm tối đa theo Part (nếu đề có khai báo)
   const total = currentQuestions.length;
-  let correctTotal = 0;
-  const partStats = {};
+  const partCount = {};
+  currentQuestions.forEach(q => { partCount[q.part] = (partCount[q.part] || 0) + 1; });
+
+  const stats = {};
+  let correctTotal = 0, earned = 0, maxPts = 0;
   currentQuestions.forEach(q => {
-    partStats[q.part] = partStats[q.part] || { total: 0, correct: 0 };
-    partStats[q.part].total++;
-    if (isQuestionCorrect(q, userAnswers[q.id])) { correctTotal++; partStats[q.part].correct++; }
+    const sc = questionScore(q, userAnswers[q.id]);
+    const w = pp ? (pp[q.part] || 0) / partCount[q.part] : 10 / total;
+    const st = stats[q.part] = stats[q.part] || { total: 0, correct: 0, pts: 0, max: 0 };
+    st.total++; st.max += w; st.pts += w * sc;
+    if (sc === 1) { st.correct++; correctTotal++; }
+    earned += w * sc; maxPts += w;
   });
 
-  const score10 = total ? ((correctTotal / total) * 10).toFixed(2) : '0.00';
-  const pct = total ? Math.round(correctTotal / total * 100) : 0;
-  const partsHtml = Object.keys(partStats).sort().map(p => `
-    <div class="result-stat-box">
-      <div class="result-stat-val">${partStats[p].correct}/${partStats[p].total}</div>
-      <div class="result-stat-lbl">Part ${p}</div>
-    </div>`).join('');
+  const pct = maxPts ? Math.round(earned / maxPts * 100) : 0;
+  const partsHtml = Object.keys(stats).sort().map(p => {
+    const st = stats[p];
+    const val = pp ? `${st.pts.toFixed(2)}/${st.max.toFixed(2)}` : `${st.correct}/${st.total}`;
+    return `<div class="result-stat-box"><div class="result-stat-val">${val}</div>
+            <div class="result-stat-lbl">Part ${p}${pp ? ' (điểm)' : ''}</div></div>`;
+  }).join('');
 
   $('resultGrid').innerHTML = `
     <div class="result-stat-box main">
-      <div class="result-stat-val">${score10} / 10</div>
-      <div class="result-stat-lbl">Thang điểm 10 (${pct}%)</div>
+      <div class="result-stat-val">${earned.toFixed(2)} / ${maxPts.toFixed(2)}</div>
+      <div class="result-stat-lbl">Tổng điểm (${pct}%)</div>
     </div>
     <div class="result-stat-box">
       <div class="result-stat-val">${correctTotal}/${total}</div>
-      <div class="result-stat-lbl">Tổng số câu đúng</div>
+      <div class="result-stat-lbl">Số câu đúng hoàn toàn</div>
     </div>
     <div class="result-stat-box">
       <div class="result-stat-val">${$('timerDisplay').textContent}</div>
@@ -395,7 +428,7 @@ function submitAndGradeAll() {
   banner.classList.add('visible');
   banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   renderAll();
-  showToast(`Đã chấm xong! Bạn đạt ${correctTotal}/${total} câu (${score10} điểm).`);
+  showToast(`Đã chấm xong! Bạn đạt ${earned.toFixed(2)}/${maxPts.toFixed(2)} điểm.`);
 }
 
 function retryWrongQuestions() {
@@ -481,8 +514,8 @@ function finalizeParsedAnswer(q, rawAns) {
   q.accepted = [...new Set([...variants, rawAns.toUpperCase()])];
   if (/^[FB-]+$/i.test(rawAns)) {
     q.quickChips = ['F', 'B', '-'];
-  } else if (['S', 'C-FB', 'C-BB', 'WCP', 'GS'].includes(rawAns.toUpperCase())) {
-    q.quickChips = ['S', 'C-FB', 'C-BB', 'WCp', 'GS'];
+  } else if (['S', 'C-FB', 'C-BB', 'CPW', 'GS'].includes(rawAns.toUpperCase())) {
+    q.quickChips = ['S', 'C-FB', 'C-BB', 'CpW', 'GS'];
     q.isSingleChoiceChip = true;
   }
 }
