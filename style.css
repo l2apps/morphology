@@ -43,10 +43,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 
 /* Layout */
 .main-container{max-width:1120px;margin:24px auto 0;padding:0 20px;display:grid;grid-template-columns:1fr 270px;gap:24px;align-items:start}
-@media (max-width:900px){
-  .main-container{grid-template-columns:1fr}
-  .sidebar-panel{order:-1;position:static!important}   /* FIX: không để sidebar đè nội dung trên mobile */
-}
+@media (max-width:900px){.main-container{grid-template-columns:1fr}}
 
 /* Filter bar */
 .filter-bar{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 16px;margin-bottom:18px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;box-shadow:var(--shadow-sm)}
@@ -189,3 +186,65 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .tb-bad{margin:6px 0 0 18px;font-size:.86rem;font-weight:500}
 .tb-ans-title{font-size:.86rem;font-weight:600;color:var(--text-muted);margin-top:12px}
 .tree-result{margin-top:14px}
+
+/* ===== MOBILE ===== */
+.fab,.sheet-backdrop,.sheet-close{display:none}
+
+/* Tablet & điện thoại: bảng câu hỏi thành bottom sheet, mở bằng nút nổi */
+@media (max-width:900px){
+  body{padding-bottom:96px}
+  .sidebar-panel{position:fixed!important;left:0;right:0;bottom:0;top:auto!important;max-height:80vh;overflow-y:auto;
+    border-radius:20px 20px 0 0;z-index:90;transform:translateY(110%);transition:transform .25s ease;
+    box-shadow:0 -10px 30px rgba(0,0,0,.2);padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+  .sidebar-panel.open{transform:none}
+  .sheet-backdrop{display:block;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:80;opacity:0;pointer-events:none;transition:opacity .2s}
+  .sheet-backdrop.open{opacity:1;pointer-events:auto}
+  .sheet-close{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid var(--border-strong);border-radius:50%;background:#fff;font-size:1rem;cursor:pointer}
+  .sidebar-hint{display:none}
+  .fab{display:inline-flex;align-items:center;gap:8px;position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:60;
+    padding:13px 20px;border:none;border-radius:999px;background:var(--primary-dark);color:#fff;font-family:inherit;font-size:.95rem;font-weight:700;
+    box-shadow:0 8px 20px rgba(4,120,87,.4);cursor:pointer}
+  .q-grid{grid-template-columns:repeat(auto-fill,minmax(46px,1fr));max-height:none}
+  .q-nav-btn{height:42px;font-size:.9rem}
+}
+
+/* Điện thoại */
+@media (max-width:600px){
+  .top-header{padding:16px 14px 18px}
+  .brand-title{font-size:1.25rem}
+  .header-actions{width:100%}
+  .exam-select{flex:1;min-width:0;font-size:16px}
+  .sticky-toolbar{padding:8px 12px}
+  .toolbar-inner{gap:8px}
+  .stat-pill{padding:4px 10px;font-size:.78rem}
+  .progress-bar-wrap{display:none}
+  .mode-switch{width:100%}
+  .mode-btn{flex:1;padding:8px 6px;font-size:.78rem}
+  .main-container{padding:0 12px;margin-top:16px}
+  .filter-bar{padding:10px}
+  .filter-tabs{width:100%;flex-wrap:nowrap;overflow-x:auto}
+  .filter-tab{white-space:nowrap}
+  .filter-actions{width:100%}
+  .filter-actions .btn{flex:1}
+  .part-banner{padding:12px 14px}
+  .q-card{padding:14px;border-radius:14px;scroll-margin-top:120px}
+  .q-prompt{font-size:.98rem}
+  .btn{min-height:42px}
+  .text-answer-input,.tb-row input,.tb-row select,.modal-textarea,.exam-select{font-size:16px}  /* chặn iOS tự phóng to */
+  .input-row .btn{flex:1}
+  .chip-btn{padding:9px 14px;font-size:.9rem}
+  .mcq-option{padding:12px}
+  .tb-word{font-size:1.5rem;flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}
+  .tb-gap{width:20px;height:48px;flex-shrink:0}
+  .tb-gap::before{left:9px}
+  .tb-gap.on{width:28px}
+  .tb-gap.on::before{left:12px}
+  .tb-ch{flex-shrink:0}
+  .tb-row input{min-width:100%}
+  .tb-row select{flex:1;min-width:120px}
+  .tb-chip{padding:11px 18px}
+  .tb-actions .btn{flex:1}
+  .modal-card{padding:16px}
+  .toast-msg{left:12px;right:12px;bottom:84px;text-align:center}
+  .result-grid{grid-template-columns:repeat(2,1fr)}
+}
