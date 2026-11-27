@@ -4,7 +4,7 @@
    Code tự vẽ: đường nối, gạch dọc, ngoặc ghép bên dưới, ký hiệu từ loại khoanh tròn.
 
    CÁCH KHAI BÁO CÂY ĐÁP ÁN (dùng trong file đề):
-     Pref('re-')               tiền tố
+     Pref('re-')               tiền tố (Pref('en-','V') nếu tiền tố đổi từ loại - chỉ để hiển thị, không bị chấm)
      Root('-ceive-')           bound root  (mặc định nhãn "Root")
      Root('like', 'V')         free root   (ghi từ loại N / V / ADJ / ADV)
      Suff('-ion', 'N')         hậu tố đổi từ loại sang N  (bỏ tham số 2 nếu không đổi)
@@ -13,7 +13,7 @@
    Dạng hình vị có nhiều cách viết được chấp nhận thì ngăn cách bằng |  (vd 'desire|desir')
    ========================================================================= */
 
-const Pref = m => ({ t: 'Pref', m });
+const Pref = (m, c = '') => ({ t: 'Pref', m, c });
 const Root = (m, c = 'Root') => ({ t: 'Root', m, c });
 const Suff = (m, c = '') => ({ t: 'Suff', m, c });
 const Infl = (m, c = '') => ({ t: 'Infl', m, c });
@@ -68,8 +68,11 @@ function compareTree(u, e) {
     const l = ul[i], nm = `“${firstAlt(x.m)}”`;
     add(`${nm}: loại hình vị`, l.t === x.t, x.t, l.t);
     add(`${nm}: dạng hình vị (gạch nối)`, String(x.m).split('|').map(norm).includes(norm(l.m)), firstAlt(x.m), l.m);
-    add(x.t === 'Root' ? `${nm}: Root / từ loại` : `${nm}: từ loại khoanh tròn`,
-        norm(l.c) === norm(x.c), x.c || 'không ghi', l.c || 'không ghi');
+    if (x.t !== 'Pref') {   // tiền tố: không chấm ký hiệu khoanh tròn
+      const alts = String(x.c || '').split('|').map(norm);   // 'N|V' = chấp nhận N hoặc V
+      add(x.t === 'Root' ? `${nm}: Root / từ loại` : `${nm}: từ loại khoanh tròn`,
+          alts.includes(norm(l.c)), firstAlt(x.c) || 'không ghi', l.c || 'không ghi');
+    }
   });
   const ui = internalsOf(u);
   internalsOf(e).forEach(ex => {
@@ -121,12 +124,12 @@ function treeSvg(roots) {
   const draw = n => {
     const p = pos.get(n);
     if (isLeaf(n)) {
-      const lab = n.t === 'Root' ? (n.c || '?') : (n.t || '?');
+      const lab = n.t === 'Root' ? (firstAlt(n.c) || '?') : (n.t || '?');
       texts += `<text x="${p.x}" y="${yLeaf}" class="ts-lab" text-anchor="middle">${escapeHtml(lab)}</text>`;
       if (n.t !== 'Root' && n.c) {
         const cx = p.x + 12 + lab.length * 5.4;
         texts += `<circle cx="${cx}" cy="${yLeaf - 5}" r="12" class="ts-circ"/>` +
-                 `<text x="${cx}" y="${yLeaf - 1}" class="ts-circt" text-anchor="middle">${escapeHtml(n.c)}</text>`;
+                 `<text x="${cx}" y="${yLeaf - 1}" class="ts-circt" text-anchor="middle">${escapeHtml(firstAlt(n.c))}</text>`;
       }
       lines += `<line x1="${p.x}" y1="${yLeaf + 8}" x2="${p.x}" y2="${yLeaf + 30}" class="ts-line"/>`;
       texts += `<text x="${p.x}" y="${yLeaf + 47}" class="ts-form" text-anchor="middle">${escapeHtml(firstAlt(n.m) || '?')}</text>`;
